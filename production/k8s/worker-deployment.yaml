@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: crm-digital-fte
+  labels:
+    app: crm-worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: crm-worker
+  template:
+    metadata:
+      labels:
+        app: crm-worker
+    spec:
+      containers:
+        - name: worker
+          image: crm-digital-fte:latest
+          command: ["python", "-m", "production.workers.message_processor"]
+          envFrom:
+            - secretRef:
+                name: crm-secrets
+            - configMapRef:
+                name: crm-config
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import sys; sys.exit(0)"
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import sys; sys.exit(0)"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      restartPolicy: Always

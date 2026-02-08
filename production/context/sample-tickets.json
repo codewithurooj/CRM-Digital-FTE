@@ -1,0 +1,413 @@
+{
+  "description": "Sample support tickets for TechCorp Customer Success FTE training and testing",
+  "version": "1.0",
+  "generated_at": "2026-01-15T00:00:00Z",
+  "tickets": [
+    {
+      "id": "TKT-001",
+      "channel": "email",
+      "category": "account_access",
+      "priority": "high",
+      "customer": {
+        "name": "David Park",
+        "email": "david.park@designstudio.co",
+        "phone": "+14155551001",
+        "plan": "professional",
+        "company": "DesignStudio Co"
+      },
+      "subject": "Locked out of my account - urgent project deadline",
+      "content": "Hi TechCorp Support,\n\nI'm unable to log into my account since this morning. I've tried resetting my password three times but never received the reset email. I have a client presentation at 3 PM today and all my project files are in TechCorp.\n\nPlease help ASAP!\n\nBest regards,\nDavid Park\nDesignStudio Co",
+      "sentiment": 0.3,
+      "expected_action": "check_account_status_and_help_with_password_reset",
+      "expected_tools": ["get_customer_history", "search_knowledge_base", "create_ticket"],
+      "should_escalate": false,
+      "tags": ["account_access", "password_reset", "urgent"]
+    },
+    {
+      "id": "TKT-002",
+      "channel": "whatsapp",
+      "category": "billing",
+      "priority": "medium",
+      "customer": {
+        "name": "Maria Santos",
+        "email": "maria@startupventures.io",
+        "phone": "+14155551002",
+        "plan": "starter",
+        "company": "Startup Ventures"
+      },
+      "subject": "Upgrade question",
+      "content": "Hey, thinking about upgrading to Professional. How much would that cost for 15 users?",
+      "sentiment": 0.7,
+      "expected_action": "escalate_pricing_inquiry",
+      "expected_tools": ["create_ticket", "escalate_to_human"],
+      "should_escalate": true,
+      "escalation_reason": "pricing_inquiry",
+      "tags": ["billing", "pricing", "upgrade"]
+    },
+    {
+      "id": "TKT-003",
+      "channel": "web_form",
+      "category": "technical",
+      "priority": "medium",
+      "customer": {
+        "name": "Alex Thompson",
+        "email": "alex.t@buildfast.dev",
+        "phone": null,
+        "plan": "professional",
+        "company": "BuildFast"
+      },
+      "subject": "GitHub integration stopped syncing",
+      "content": "Our GitHub integration hasn't synced any new pull requests since yesterday morning. We have the Professional plan and the integration was working fine before. I've already tried disconnecting and reconnecting it, but the issue persists. Our team relies on this for task automation.",
+      "sentiment": 0.5,
+      "expected_action": "troubleshoot_integration_issue",
+      "expected_tools": ["get_customer_history", "search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["integration", "github", "sync_issue"]
+    },
+    {
+      "id": "TKT-004",
+      "channel": "email",
+      "category": "feature_request",
+      "priority": "low",
+      "customer": {
+        "name": "Jennifer Walsh",
+        "email": "jwalsh@enterprisecorp.com",
+        "phone": "+14155551004",
+        "plan": "enterprise",
+        "company": "Enterprise Corp"
+      },
+      "subject": "Request: Custom fields for tasks",
+      "content": "Hello TechCorp Team,\n\nOur organization would greatly benefit from the ability to add custom fields to tasks. Specifically, we need:\n\n1. A \"Department\" dropdown field\n2. A \"Cost Center\" text field\n3. A \"Compliance Status\" checkbox\n\nWe have 200+ users and this would significantly improve our workflow tracking. Is this on your roadmap?\n\nThank you,\nJennifer Walsh\nDirector of PMO, Enterprise Corp",
+      "sentiment": 0.7,
+      "expected_action": "log_feature_request_and_check_roadmap",
+      "expected_tools": ["get_customer_history", "search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["feature_request", "custom_fields", "enterprise"]
+    },
+    {
+      "id": "TKT-005",
+      "channel": "whatsapp",
+      "category": "complaint",
+      "priority": "high",
+      "customer": {
+        "name": "Robert Kim",
+        "email": "rkim@techfirm.net",
+        "phone": "+14155551005",
+        "plan": "professional",
+        "company": "TechFirm"
+      },
+      "subject": "Product broken",
+      "content": "This is RIDICULOUS!! Your app has been down for 2 hours and we can't access ANY of our project data. We're losing money every minute. I want to speak to a manager RIGHT NOW or I'm talking to my lawyer about our SLA agreement.",
+      "sentiment": 0.1,
+      "expected_action": "escalate_angry_customer_with_legal_mention",
+      "expected_tools": ["create_ticket", "escalate_to_human"],
+      "should_escalate": true,
+      "escalation_reason": "angry_customer_legal_mention",
+      "tags": ["complaint", "outage", "legal_mention", "angry"]
+    },
+    {
+      "id": "TKT-006",
+      "channel": "web_form",
+      "category": "how_to",
+      "priority": "low",
+      "customer": {
+        "name": "Lisa Chen",
+        "email": "lisa.chen@creativeagency.com",
+        "phone": null,
+        "plan": "starter",
+        "company": "Creative Agency"
+      },
+      "subject": "How to set up automations?",
+      "content": "Hi, I just upgraded to Starter and I'm trying to set up an automation that sends a Slack notification whenever a task is moved to 'Done'. I can't find where to configure this. Can you walk me through it?",
+      "sentiment": 0.7,
+      "expected_action": "provide_automation_setup_guide",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["how_to", "automations", "slack_integration"]
+    },
+    {
+      "id": "TKT-007",
+      "channel": "email",
+      "category": "billing",
+      "priority": "high",
+      "customer": {
+        "name": "Michael Rodriguez",
+        "email": "mrodriguez@globalco.com",
+        "phone": "+14155551007",
+        "plan": "enterprise",
+        "company": "GlobalCo"
+      },
+      "subject": "Requesting a refund for last month",
+      "content": "Dear TechCorp Billing,\n\nDue to the two service outages we experienced last month (Jan 5 and Jan 12), our team was unable to work for approximately 6 hours total. This is unacceptable given our Enterprise SLA guarantees 99.9% uptime.\n\nI am requesting a full refund for last month's billing of $12,475.00. If this is not resolved promptly, we will need to escalate this to our legal department.\n\nRegards,\nMichael Rodriguez\nCTO, GlobalCo",
+      "sentiment": 0.2,
+      "expected_action": "escalate_refund_request",
+      "expected_tools": ["create_ticket", "get_customer_history", "escalate_to_human"],
+      "should_escalate": true,
+      "escalation_reason": "refund_request",
+      "tags": ["billing", "refund", "sla", "enterprise", "legal_mention"]
+    },
+    {
+      "id": "TKT-008",
+      "channel": "whatsapp",
+      "category": "how_to",
+      "priority": "low",
+      "customer": {
+        "name": "Sarah Johnson",
+        "email": "sjohnson@freelance.me",
+        "phone": "+14155551008",
+        "plan": "free",
+        "company": null
+      },
+      "subject": "How to use templates",
+      "content": "Hi! How do I create a document from a template? I see the option but it says I need to upgrade. Is there a free way?",
+      "sentiment": 0.6,
+      "expected_action": "explain_template_feature_and_plan_limitations",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["how_to", "templates", "free_plan"]
+    },
+    {
+      "id": "TKT-009",
+      "channel": "email",
+      "category": "technical",
+      "priority": "high",
+      "customer": {
+        "name": "James Liu",
+        "email": "jliu@dataworks.com",
+        "phone": "+14155551009",
+        "plan": "professional",
+        "company": "DataWorks"
+      },
+      "subject": "API rate limiting issue - breaking our CI/CD pipeline",
+      "content": "Hello Support,\n\nOur CI/CD pipeline makes approximately 200 API calls per minute to sync task statuses with our deployment system. Since yesterday, we're getting 429 (Too Many Requests) errors consistently.\n\nAccording to your docs, Professional plan should support 500 req/min. Here are our request logs showing we're well within limits:\n\n- Average: 180 req/min\n- Peak: 220 req/min\n- Error rate: 40% (all 429s)\n\nThis is blocking our deployment workflow. Can you investigate?\n\nThanks,\nJames Liu\nLead DevOps, DataWorks",
+      "sentiment": 0.4,
+      "expected_action": "investigate_api_rate_limit_issue",
+      "expected_tools": ["get_customer_history", "search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["technical", "api", "rate_limiting", "ci_cd"]
+    },
+    {
+      "id": "TKT-010",
+      "channel": "web_form",
+      "category": "account_access",
+      "priority": "medium",
+      "customer": {
+        "name": "Emily Nguyen",
+        "email": "emilyn@schooldistrict.edu",
+        "phone": null,
+        "plan": "starter",
+        "company": "Metro School District"
+      },
+      "subject": "How to add new team members",
+      "content": "We need to add 5 new teachers to our TechCorp workspace but I can't find the option. I'm the admin. Also, do you offer education discounts? We're a public school district.",
+      "sentiment": 0.7,
+      "expected_action": "guide_team_management_and_note_education_discount",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["account_access", "team_management", "education_discount"]
+    },
+    {
+      "id": "TKT-011",
+      "channel": "whatsapp",
+      "category": "technical",
+      "priority": "medium",
+      "customer": {
+        "name": "David Park",
+        "email": "david.park@designstudio.co",
+        "phone": "+14155551001",
+        "plan": "professional",
+        "company": "DesignStudio Co"
+      },
+      "subject": "Follow-up from email",
+      "content": "Hey, I emailed earlier about being locked out. Got back in but now my projects are showing as empty. Is this related? Please check ASAP",
+      "sentiment": 0.4,
+      "expected_action": "cross_channel_followup_check_history",
+      "expected_tools": ["get_customer_history", "search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "notes": "Cross-channel test: Same customer as TKT-001 (email), now on WhatsApp. Agent should recognize and link conversations.",
+      "tags": ["technical", "cross_channel", "follow_up", "data_issue"]
+    },
+    {
+      "id": "TKT-012",
+      "channel": "email",
+      "category": "how_to",
+      "priority": "low",
+      "customer": {
+        "name": "Priya Patel",
+        "email": "priya@marketingteam.co",
+        "phone": "+14155551012",
+        "plan": "professional",
+        "company": "Marketing Team Co"
+      },
+      "subject": "Exporting project data to CSV",
+      "content": "Hi there,\n\nI need to export all tasks from our Q4 Marketing Campaign project to a CSV file for our quarterly report. I found the export option but it only gives me JSON. Is there a way to get CSV?\n\nAlso, can I schedule automatic weekly exports?\n\nThanks,\nPriya",
+      "sentiment": 0.7,
+      "expected_action": "explain_export_options_and_plan_features",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["how_to", "export", "csv", "reporting"]
+    },
+    {
+      "id": "TKT-013",
+      "channel": "whatsapp",
+      "category": "complaint",
+      "priority": "medium",
+      "customer": {
+        "name": "Ahmed Hassan",
+        "email": "ahmed@consultfirm.com",
+        "phone": "+14155551013",
+        "plan": "starter",
+        "company": "ConsultFirm"
+      },
+      "subject": "Slow app",
+      "content": "Your app has been super slow all week. Pages take forever to load. Really frustrating when I'm trying to meet client deadlines. When will this be fixed?",
+      "sentiment": 0.3,
+      "expected_action": "acknowledge_and_troubleshoot_performance",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["complaint", "performance", "slow"]
+    },
+    {
+      "id": "TKT-014",
+      "channel": "web_form",
+      "category": "feature_request",
+      "priority": "low",
+      "customer": {
+        "name": "Tomoko Yamada",
+        "email": "tomoko@devshop.jp",
+        "phone": null,
+        "plan": "professional",
+        "company": "DevShop"
+      },
+      "subject": "Request: Dark mode for web app",
+      "content": "Would love to see a dark mode option for the web app. Our engineering team works late hours and the bright white interface causes eye strain. The mobile app already has it - would be great to have it on desktop/web too.",
+      "sentiment": 0.6,
+      "expected_action": "log_feature_request",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["feature_request", "dark_mode", "ux"]
+    },
+    {
+      "id": "TKT-015",
+      "channel": "email",
+      "category": "technical",
+      "priority": "medium",
+      "customer": {
+        "name": "Carlos Mendez",
+        "email": "carlos@agiledev.com",
+        "phone": "+14155551015",
+        "plan": "professional",
+        "company": "AgileDev"
+      },
+      "subject": "Tasks not syncing between desktop and mobile",
+      "content": "Hey TechCorp,\n\nI created 3 tasks on my desktop this morning and they're not showing up on my iPhone app. I've tried:\n- Force closing and reopening the app\n- Pulling down to refresh\n- Logging out and back in\n\nThe tasks show on web and desktop but not mobile. I'm on iOS 17.2 and TechCorp app v4.1.8.\n\nCan you help?\n\nCarlos Mendez\nAgileDev",
+      "sentiment": 0.5,
+      "expected_action": "troubleshoot_sync_issue",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["technical", "sync", "mobile", "desktop"]
+    },
+    {
+      "id": "TKT-016",
+      "channel": "whatsapp",
+      "category": "account_access",
+      "priority": "medium",
+      "customer": {
+        "name": "Rachel Green",
+        "email": "rgreen@retailbrand.com",
+        "phone": "+14155551016",
+        "plan": "starter",
+        "company": "RetailBrand"
+      },
+      "subject": "SSO question",
+      "content": "We want to set up Google SSO for our team but can't find the option. Is it available on Starter?",
+      "sentiment": 0.6,
+      "expected_action": "explain_sso_plan_requirements",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["account_access", "sso", "plan_limitation"]
+    },
+    {
+      "id": "TKT-017",
+      "channel": "email",
+      "category": "billing",
+      "priority": "medium",
+      "customer": {
+        "name": "Nathan Brooks",
+        "email": "nbrooks@legalpartners.com",
+        "phone": "+14155551017",
+        "plan": "professional",
+        "company": "Legal Partners LLP"
+      },
+      "subject": "Question about data privacy compliance",
+      "content": "Dear TechCorp,\n\nOur firm is subject to strict data privacy regulations. We need documentation on:\n\n1. Where our data is physically stored\n2. Your GDPR compliance status\n3. Data Processing Agreement (DPA)\n4. Right to erasure process\n5. Sub-processor list\n\nThis is required for our annual compliance audit. Can you provide these documents?\n\nRegards,\nNathan Brooks, Esq.\nLegal Partners LLP",
+      "sentiment": 0.6,
+      "expected_action": "provide_compliance_info_and_escalate_for_dpa",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "escalate_to_human"],
+      "should_escalate": true,
+      "escalation_reason": "legal_compliance_request",
+      "tags": ["billing", "compliance", "gdpr", "legal", "data_privacy"]
+    },
+    {
+      "id": "TKT-018",
+      "channel": "web_form",
+      "category": "how_to",
+      "priority": "low",
+      "customer": {
+        "name": "Olivia Martinez",
+        "email": "olivia@nonprofithelp.org",
+        "phone": null,
+        "plan": "free",
+        "company": "NonprofitHelp"
+      },
+      "subject": "Importing from Trello",
+      "content": "We're migrating from Trello and have about 12 boards to import. Can you walk me through the import process? Also, will our Trello labels and due dates come over? We're a nonprofit - do you have any special pricing?",
+      "sentiment": 0.7,
+      "expected_action": "guide_trello_import_and_mention_nonprofit_discount",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["how_to", "import", "trello", "migration", "nonprofit"]
+    },
+    {
+      "id": "TKT-019",
+      "channel": "whatsapp",
+      "category": "how_to",
+      "priority": "low",
+      "customer": {
+        "name": "Chris Taylor",
+        "email": "chris@solodev.io",
+        "phone": "+14155551019",
+        "plan": "free",
+        "company": null
+      },
+      "subject": "Keyboard shortcuts",
+      "content": "What are the keyboard shortcuts? Specifically how do I quickly create a task?",
+      "sentiment": 0.7,
+      "expected_action": "provide_keyboard_shortcuts",
+      "expected_tools": ["search_knowledge_base", "create_ticket", "send_response"],
+      "should_escalate": false,
+      "tags": ["how_to", "keyboard_shortcuts", "productivity"]
+    },
+    {
+      "id": "TKT-020",
+      "channel": "email",
+      "category": "complaint",
+      "priority": "high",
+      "customer": {
+        "name": "Karen Wilson",
+        "email": "kwilson@bigretail.com",
+        "phone": "+14155551020",
+        "plan": "enterprise",
+        "company": "BigRetail Inc"
+      },
+      "subject": "URGENT: Data appears to be missing from our workspace",
+      "content": "To Whom It May Concern,\n\nThis morning our team discovered that an entire project ('Holiday Campaign 2026') with 340+ tasks, 50 documents, and 3 months of work has DISAPPEARED from our workspace. No one on our team deleted it, and it doesn't appear in the trash or archives.\n\nThis project represents over $200,000 in planning work. We need this data recovered IMMEDIATELY.\n\nIf this cannot be resolved today, we will be engaging legal counsel to discuss our options under our enterprise contract.\n\nKaren Wilson\nVP Operations, BigRetail Inc",
+      "sentiment": 0.1,
+      "expected_action": "escalate_data_loss_immediately",
+      "expected_tools": ["create_ticket", "get_customer_history", "escalate_to_human"],
+      "should_escalate": true,
+      "escalation_reason": "data_loss_enterprise_legal_threat",
+      "tags": ["complaint", "data_loss", "enterprise", "urgent", "legal_mention"]
+    }
+  ]
+}

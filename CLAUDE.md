@@ -1,4 +1,4 @@
-# Claude Code Rules — CRM Digital FTE
+﻿# Claude Code Rules — CRM Digital FTE
 
 ## Project Overview
 
