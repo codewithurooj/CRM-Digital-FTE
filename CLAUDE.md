@@ -1,210 +1,261 @@
-# Claude Code Rules
+# Claude Code Rules — CRM Digital FTE
 
-This file is generated during init for the selected agent.
+## Project Overview
 
-You are an expert AI assistant specializing in Spec-Driven Development (SDD). Your primary goal is to work with the architext to build products.
+**Project**: CRM Digital FTE (Customer Success AI Employee)
+**Type**: Hackathon 5 — Build a 24/7 AI Customer Support Agent
+**Duration**: 48-72 Development Hours | Solo Developer
 
-## Task context
+### What This Project Does
 
-**Your Surface:** You operate on a project level, providing guidance to users and executing development tasks via a defined set of tools.
+An AI-powered Customer Success agent (Digital Full-Time Equivalent) that:
+- Handles customer support queries **24/7 autonomously** across 3 channels
+- **Gmail** — receives emails via Gmail API + Pub/Sub, replies via Gmail API
+- **WhatsApp** — receives messages via Twilio webhook, replies via Twilio API
+- **Web Support Form** — React/Next.js form submitting to FastAPI backend
+- Identifies the **same customer across channels** (email on Gmail = same person on WhatsApp)
+- Creates tickets, searches a knowledge base, and escalates when needed
+- Tracks all interactions in a PostgreSQL-based CRM (no external CRM)
+- Streams events through Kafka for async processing
+- Deploys on Kubernetes for 24/7 uptime with auto-scaling
+
+### Business Context
+
+Replaces a $75k/year human support agent with an AI agent costing <$1k/year.
+The agent is for a fictional SaaS company ("TechCorp") whose product docs,
+company profile, and sample tickets live in the `context/` folder.
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Language** | Python 3.11+ | Backend, agent, workers |
+| **AI Agent** | OpenAI Agents SDK | `@function_tool` pattern, GPT-4o |
+| **API** | FastAPI + uvicorn | REST endpoints, webhook handlers |
+| **Database** | PostgreSQL 16 + pgvector | CRM tables + vector search for knowledge base |
+| **DB Driver** | asyncpg | Async PostgreSQL access |
+| **Streaming** | Apache Kafka (aiokafka) | Decouple channel intake from agent processing |
+| **Frontend** | React / Next.js | Web Support Form component only |
+| **Email** | Gmail API | OAuth2 + Pub/Sub push notifications |
+| **Messaging** | Twilio WhatsApp API | Webhook + REST for WhatsApp |
+| **Testing** | pytest + pytest-asyncio + httpx | TDD mandatory, 80% coverage gate |
+| **Load Test** | Locust | 24/7 readiness validation |
+| **Container** | Docker | Multi-stage builds |
+| **Orchestration** | Kubernetes (minikube) | Production deployment |
+
+## Project Structure
+
+```
+CRM-Digital-FTE/
+├── context/                    # Fake SaaS company context (knowledge base source)
+│   ├── company-profile.md
+│   ├── product-docs.md
+│   ├── sample-tickets.json
+│   ├── escalation-rules.md
+│   └── brand-voice.md
+├── production/
+│   ├── agent/                  # AI agent (OpenAI Agents SDK)
+│   │   ├── customer_success_agent.py
+│   │   ├── tools.py            # @function_tool definitions
+│   │   ├── prompts.py          # System prompts
+│   │   └── formatters.py       # Channel-specific response formatting
+│   ├── channels/               # Channel integrations
+│   │   ├── gmail_handler.py
+│   │   ├── whatsapp_handler.py
+│   │   └── web_form_handler.py
+│   ├── workers/                # Kafka consumers
+│   │   ├── message_processor.py
+│   │   └── metrics_collector.py
+│   ├── api/                    # FastAPI application
+│   │   └── main.py
+│   ├── database/               # PostgreSQL schema + queries
+│   │   ├── schema.sql
+│   │   ├── migrations/
+│   │   └── queries.py
+│   ├── kafka_client.py         # Kafka producer/consumer
+│   ├── tests/                  # All tests (TDD)
+│   │   ├── conftest.py
+│   │   ├── unit/
+│   │   ├── integration/
+│   │   ├── contract/
+│   │   ├── e2e/
+│   │   └── load/
+│   ├── k8s/                    # Kubernetes manifests
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── requirements.txt
+├── web-form/                   # React/Next.js Support Form
+│   └── SupportForm.jsx
+├── specs/                      # Hackathon deliverable specs
+│   ├── discovery-log.md
+│   └── customer-success-fte-spec.md
+├── .specify/                   # SDD templates and scripts
+│   └── memory/constitution.md  # Project constitution (8 principles)
+├── history/                    # PHRs and ADRs
+│   ├── prompts/
+│   └── adr/
+├── CLAUDE.md                   # This file
+└── .gitignore
+```
+
+## Database Schema (PostgreSQL = Your CRM)
+
+Key tables — no external CRM needed:
+- `customers` — unified customer records (email + phone)
+- `customer_identifiers` — cross-channel identity matching
+- `conversations` — conversation threads with channel tracking
+- `messages` — all messages (inbound + outbound) with channel metadata
+- `tickets` — support tickets with status lifecycle
+- `knowledge_base` — product docs with pgvector embeddings for semantic search
+- `channel_configs` — per-channel settings
+- `agent_metrics` — performance tracking
+
+## Core Architecture
+
+```
+Gmail Webhook ──┐
+WhatsApp Hook ──┼──→ Kafka (fte.tickets.incoming) ──→ Worker Pod ──→ Agent ──→ Response
+Web Form POST ──┘         (async, decoupled)          (consumer)    (GPT-4o)   (via channel)
+```
+
+- Webhooks publish to Kafka and return immediately (< 500ms)
+- Worker pods consume from Kafka, run the agent, store results in PostgreSQL
+- Agent uses 5 tools: search_knowledge_base, create_ticket, get_customer_history, escalate_to_human, send_response
+- Responses formatted per channel (email: formal, WhatsApp: concise, web: semi-formal)
+
+## Constitution Principles (v1.1.0)
+
+See `.specify/memory/constitution.md` for full details. Summary:
+
+1. **Production-First** — no throwaway prototypes
+2. **Channel-Agnostic Core** — agent + DB are channel-unaware; channels are pluggable
+3. **TDD (NON-NEGOTIABLE)** — Red-Green-Refactor, 80% coverage gate
+4. **Database as Source of Truth** — all state in PostgreSQL
+5. **Async Pipeline** — Kafka decouples intake from processing
+6. **Fail Gracefully** — never lose a customer message
+7. **Secrets in Environment** — zero hardcoded credentials
+8. **Smallest Viable Diff** — build incrementally along dependency chain
+
+## Development Methodology
+
+### TDD — Red-Green-Refactor (Mandatory)
+
+Every feature follows this cycle:
+1. **RED**: Write a failing test
+2. **GREEN**: Write minimum code to pass
+3. **REFACTOR**: Clean up while tests stay green
+
+Coverage: `pytest --cov=src --cov-fail-under=80`
+
+### Build Order (Dependency Chain)
+
+```
+Step 1: Context files → Step 2: Database → Step 3: Agent → Step 4: Web Form
+→ Step 5: Kafka → Step 6: Gmail → Step 7: WhatsApp → Step 8: K8s → Step 9: Tests/Docs
+```
+
+### Agent Guardrails (Hard Constraints)
+
+- NEVER discuss pricing → escalate immediately
+- NEVER promise features not in documentation
+- NEVER process refunds → escalate to billing
+- ALWAYS create ticket BEFORE responding
+- ALWAYS format response per channel
+- ALWAYS check sentiment before closing
+
+## SDD Agent Instructions
+
+You are an expert AI assistant specializing in Spec-Driven Development (SDD). Your primary goal is to work with the architect to build this CRM Digital FTE.
 
 **Your Success is Measured By:**
-- All outputs strictly follow the user intent.
-- Prompt History Records (PHRs) are created automatically and accurately for every user prompt.
-- Architectural Decision Record (ADR) suggestions are made intelligently for significant decisions.
-- All changes are small, testable, and reference code precisely.
+- All outputs strictly follow user intent
+- TDD cycle enforced: tests written BEFORE implementation
+- PHRs created for every significant interaction
+- ADR suggestions made for architectural decisions
+- All changes are small, testable, and reference code precisely
 
-## Core Guarantees (Product Promise)
+### Core Guarantees
 
-- Record every user input verbatim in a Prompt History Record (PHR) after every user message. Do not truncate; preserve full multiline input.
+- Record every user input in a PHR after every user message
 - PHR routing (all under `history/prompts/`):
   - Constitution → `history/prompts/constitution/`
   - Feature-specific → `history/prompts/<feature-name>/`
   - General → `history/prompts/general/`
-- ADR suggestions: when an architecturally significant decision is detected, suggest: "📋 Architectural decision detected: <brief>. Document? Run `/sp.adr <title>`." Never auto‑create ADRs; require user consent.
+- ADR suggestions: when architecturally significant decisions are detected, suggest documenting them. Never auto-create ADRs.
 
-## Development Guidelines
+### Development Guidelines
 
-### 1. Authoritative Source Mandate:
-Agents MUST prioritize and use MCP tools and CLI commands for all information gathering and task execution. NEVER assume a solution from internal knowledge; all methods require external verification.
+1. **Authoritative Source Mandate**: Use MCP tools and CLI commands for information gathering. NEVER assume from internal knowledge.
+2. **TDD Enforcement**: Always write tests first. Refuse to write implementation without a failing test.
+3. **PHR for Every Input**: Create a Prompt History Record after completing requests.
+4. **ADR Suggestions**: Surface architectural decisions for documentation.
+5. **Human as Tool**: Ask the user when requirements are ambiguous or multiple valid approaches exist.
 
-### 2. Execution Flow:
-Treat MCP servers as first-class tools for discovery, verification, execution, and state capture. PREFER CLI interactions (running commands and capturing outputs) over manual file creation or reliance on internal knowledge.
+### PHR Creation Process
 
-### 3. Knowledge capture (PHR) for Every User Input.
-After completing requests, you **MUST** create a PHR (Prompt History Record).
+1. Detect stage: constitution | spec | plan | tasks | red | green | refactor | explainer | misc | general
+2. Generate title (3-7 words, slug for filename)
+3. Route: constitution → `history/prompts/constitution/`, feature → `history/prompts/<feature>/`, general → `history/prompts/general/`
+4. Read template from `.specify/templates/phr-template.prompt.md`
+5. Fill ALL placeholders, write file
+6. Validate: no unresolved placeholders, path matches route
 
-**When to create PHRs:**
-- Implementation work (code changes, new features)
-- Planning/architecture discussions
-- Debugging sessions
-- Spec/task/plan creation
-- Multi-step workflows
+### Default Policies
 
-**PHR Creation Process:**
+- Clarify and plan first
+- Do not invent APIs or contracts; ask if missing
+- Never hardcode secrets — use `.env`
+- Prefer smallest viable diff
+- Cite existing code with references (start:end:path)
+- Keep reasoning private; output decisions and artifacts
 
-1) Detect stage
-   - One of: constitution | spec | plan | tasks | red | green | refactor | explainer | misc | general
+### Execution Contract
 
-2) Generate title
-   - 3–7 words; create a slug for the filename.
+1. Confirm surface and success criteria
+2. List constraints, invariants, non-goals
+3. Produce artifact with acceptance checks
+4. Follow-ups and risks (max 3 bullets)
+5. Create PHR
+6. Surface ADR suggestions if applicable
 
-2a) Resolve route (all under history/prompts/)
-  - `constitution` → `history/prompts/constitution/`
-  - Feature stages (spec, plan, tasks, red, green, refactor, explainer, misc) → `history/prompts/<feature-name>/` (requires feature context)
-  - `general` → `history/prompts/general/`
+## Architect Guidelines
 
-3) Prefer agent‑native flow (no shell)
-   - Read the PHR template from one of:
-     - `.specify/templates/phr-template.prompt.md`
-     - `templates/phr-template.prompt.md`
-   - Allocate an ID (increment; on collision, increment again).
-   - Compute output path based on stage:
-     - Constitution → `history/prompts/constitution/<ID>-<slug>.constitution.prompt.md`
-     - Feature → `history/prompts/<feature-name>/<ID>-<slug>.<stage>.prompt.md`
-     - General → `history/prompts/general/<ID>-<slug>.general.prompt.md`
-   - Fill ALL placeholders in YAML and body:
-     - ID, TITLE, STAGE, DATE_ISO (YYYY‑MM‑DD), SURFACE="agent"
-     - MODEL (best known), FEATURE (or "none"), BRANCH, USER
-     - COMMAND (current command), LABELS (["topic1","topic2",...])
-     - LINKS: SPEC/TICKET/ADR/PR (URLs or "null")
-     - FILES_YAML: list created/modified files (one per line, " - ")
-     - TESTS_YAML: list tests run/added (one per line, " - ")
-     - PROMPT_TEXT: full user input (verbatim, not truncated)
-     - RESPONSE_TEXT: key assistant output (concise but representative)
-     - Any OUTCOME/EVALUATION fields required by the template
-   - Write the completed file with agent file tools (WriteFile/Edit).
-   - Confirm absolute path in output.
+When planning, address:
+1. Scope and Dependencies (in/out of scope, external deps)
+2. Key Decisions and Rationale
+3. Interfaces and API Contracts
+4. Non-Functional Requirements (performance, reliability, security, cost)
+5. Data Management and Migration
+6. Operational Readiness (observability, alerting, runbooks, deployment)
+7. Risk Analysis (top 3 risks, blast radius, kill switches)
+8. Evaluation (definition of done, output validation)
+9. ADRs for significant decisions
 
-4) Use sp.phr command file if present
-   - If `.**/commands/sp.phr.*` exists, follow its structure.
-   - If it references shell but Shell is unavailable, still perform step 3 with agent‑native tools.
+### ADR Significance Test
 
-5) Shell fallback (only if step 3 is unavailable or fails, and Shell is permitted)
-   - Run: `.specify/scripts/bash/create-phr.sh --title "<title>" --stage <stage> [--feature <name>] --json`
-   - Then open/patch the created file to ensure all placeholders are filled and prompt/response are embedded.
-
-6) Routing (automatic, all under history/prompts/)
-   - Constitution → `history/prompts/constitution/`
-   - Feature stages → `history/prompts/<feature-name>/` (auto-detected from branch or explicit feature context)
-   - General → `history/prompts/general/`
-
-7) Post‑creation validations (must pass)
-   - No unresolved placeholders (e.g., `{{THIS}}`, `[THAT]`).
-   - Title, stage, and dates match front‑matter.
-   - PROMPT_TEXT is complete (not truncated).
-   - File exists at the expected path and is readable.
-   - Path matches route.
-
-8) Report
-   - Print: ID, path, stage, title.
-   - On any failure: warn but do not block the main command.
-   - Skip PHR only for `/sp.phr` itself.
-
-### 4. Explicit ADR suggestions
-- When significant architectural decisions are made (typically during `/sp.plan` and sometimes `/sp.tasks`), run the three‑part test and suggest documenting with:
-  "📋 Architectural decision detected: <brief> — Document reasoning and tradeoffs? Run `/sp.adr <decision-title>`"
-- Wait for user consent; never auto‑create the ADR.
-
-### 5. Human as Tool Strategy
-You are not expected to solve every problem autonomously. You MUST invoke the user for input when you encounter situations that require human judgment. Treat the user as a specialized tool for clarification and decision-making.
-
-**Invocation Triggers:**
-1.  **Ambiguous Requirements:** When user intent is unclear, ask 2-3 targeted clarifying questions before proceeding.
-2.  **Unforeseen Dependencies:** When discovering dependencies not mentioned in the spec, surface them and ask for prioritization.
-3.  **Architectural Uncertainty:** When multiple valid approaches exist with significant tradeoffs, present options and get user's preference.
-4.  **Completion Checkpoint:** After completing major milestones, summarize what was done and confirm next steps. 
-
-## Default policies (must follow)
-- Clarify and plan first - keep business understanding separate from technical plan and carefully architect and implement.
-- Do not invent APIs, data, or contracts; ask targeted clarifiers if missing.
-- Never hardcode secrets or tokens; use `.env` and docs.
-- Prefer the smallest viable diff; do not refactor unrelated code.
-- Cite existing code with code references (start:end:path); propose new code in fenced blocks.
-- Keep reasoning private; output only decisions, artifacts, and justifications.
-
-### Execution contract for every request
-1) Confirm surface and success criteria (one sentence).
-2) List constraints, invariants, non‑goals.
-3) Produce the artifact with acceptance checks inlined (checkboxes or tests where applicable).
-4) Add follow‑ups and risks (max 3 bullets).
-5) Create PHR in appropriate subdirectory under `history/prompts/` (constitution, feature-name, or general).
-6) If plan/tasks identified decisions that meet significance, surface ADR suggestion text as described above.
-
-### Minimum acceptance criteria
-- Clear, testable acceptance criteria included
-- Explicit error paths and constraints stated
-- Smallest viable change; no unrelated edits
-- Code references to modified/inspected files where relevant
-
-## Architect Guidelines (for planning)
-
-Instructions: As an expert architect, generate a detailed architectural plan for [Project Name]. Address each of the following thoroughly.
-
-1. Scope and Dependencies:
-   - In Scope: boundaries and key features.
-   - Out of Scope: explicitly excluded items.
-   - External Dependencies: systems/services/teams and ownership.
-
-2. Key Decisions and Rationale:
-   - Options Considered, Trade-offs, Rationale.
-   - Principles: measurable, reversible where possible, smallest viable change.
-
-3. Interfaces and API Contracts:
-   - Public APIs: Inputs, Outputs, Errors.
-   - Versioning Strategy.
-   - Idempotency, Timeouts, Retries.
-   - Error Taxonomy with status codes.
-
-4. Non-Functional Requirements (NFRs) and Budgets:
-   - Performance: p95 latency, throughput, resource caps.
-   - Reliability: SLOs, error budgets, degradation strategy.
-   - Security: AuthN/AuthZ, data handling, secrets, auditing.
-   - Cost: unit economics.
-
-5. Data Management and Migration:
-   - Source of Truth, Schema Evolution, Migration and Rollback, Data Retention.
-
-6. Operational Readiness:
-   - Observability: logs, metrics, traces.
-   - Alerting: thresholds and on-call owners.
-   - Runbooks for common tasks.
-   - Deployment and Rollback strategies.
-   - Feature Flags and compatibility.
-
-7. Risk Analysis and Mitigation:
-   - Top 3 Risks, blast radius, kill switches/guardrails.
-
-8. Evaluation and Validation:
-   - Definition of Done (tests, scans).
-   - Output Validation for format/requirements/safety.
-
-9. Architectural Decision Record (ADR):
-   - For each significant decision, create an ADR and link it.
-
-### Architecture Decision Records (ADR) - Intelligent Suggestion
-
-After design/architecture work, test for ADR significance:
-
-- Impact: long-term consequences? (e.g., framework, data model, API, security, platform)
+- Impact: long-term consequences?
 - Alternatives: multiple viable options considered?
-- Scope: cross‑cutting and influences system design?
+- Scope: cross-cutting, influences system design?
 
-If ALL true, suggest:
-📋 Architectural decision detected: [brief-description]
-   Document reasoning and tradeoffs? Run `/sp.adr [decision-title]`
+If ALL true, suggest: "Architectural decision detected: [brief]. Document? Run `/sp.adr [title]`"
 
-Wait for consent; never auto-create ADRs. Group related decisions (stacks, authentication, deployment) into one ADR when appropriate.
+## Scoring Rubric (100 points)
 
-## Basic Project Structure
-
-- `.specify/memory/constitution.md` — Project principles
-- `specs/<feature>/spec.md` — Feature requirements
-- `specs/<feature>/plan.md` — Architecture decisions
-- `specs/<feature>/tasks.md` — Testable tasks with cases
-- `history/prompts/` — Prompt History Records
-- `history/adr/` — Architecture Decision Records
-- `.specify/` — SpecKit Plus templates and scripts
+| Category | Points | Key Requirements |
+|----------|--------|-----------------|
+| Incubation Quality | 10 | Discovery log, iterative exploration |
+| Agent Implementation | 10 | All tools work, channel-aware, error handling |
+| **Web Support Form** | **10** | **Complete React form — REQUIRED** |
+| Channel Integrations | 10 | Gmail + WhatsApp handlers |
+| Database + Kafka | 5 | Schema, channel tracking, streaming |
+| Kubernetes | 5 | Manifests, scaling, health checks |
+| 24/7 Readiness | 10 | Pod restarts, scaling, no SPOF |
+| Cross-Channel | 10 | Customer ID across channels, history preserved |
+| Monitoring | 5 | Channel metrics, alerts |
+| Customer Experience | 10 | Channel-appropriate responses, escalation |
+| Documentation | 5 | Deployment guide, API docs |
+| Innovation | 10 | Novel approaches, clear evolution |
 
 ## Code Standards
+
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
