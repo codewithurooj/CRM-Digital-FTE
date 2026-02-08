@@ -1,18 +1,18 @@
 <!--
   Sync Impact Report
   ==================
-  Version change: 0.0.0 → 1.0.0 (MAJOR — initial ratification)
-  Modified principles: N/A (initial creation)
+  Version change: 1.0.0 → 1.1.0 (MINOR — new principle added)
+  Modified principles:
+    - III–VII renumbered to IV–VIII
   Added sections:
-    - 7 Core Principles (I–VII)
-    - Technology Stack & Constraints
-    - Development Workflow
-    - Governance
+    - Principle III: Test-Driven Development (NON-NEGOTIABLE)
+    - Testing framework added to Required Stack table
+    - Coverage gate added to Hard Constraints
   Removed sections: N/A
   Templates requiring updates:
-    - .specify/templates/plan-template.md — ✅ no changes needed (Constitution Check placeholder is generic)
-    - .specify/templates/spec-template.md — ✅ compatible (user stories + acceptance criteria align)
-    - .specify/templates/tasks-template.md — ✅ compatible (phase structure matches workflow)
+    - .specify/templates/plan-template.md — ✅ no changes needed
+    - .specify/templates/spec-template.md — ✅ compatible
+    - .specify/templates/tasks-template.md — ✅ compatible (test-first ordering preserved)
   Follow-up TODOs: None
 -->
 
@@ -43,7 +43,29 @@ continuity. A unified core with pluggable channel adapters ensures a
 customer identified via email is the same customer on WhatsApp — without
 duplicating logic.
 
-### III. Database as Source of Truth
+### III. Test-Driven Development (NON-NEGOTIABLE)
+
+TDD is mandatory. The Red-Green-Refactor cycle MUST be strictly enforced:
+1. **RED**: Write a failing test that defines the expected behavior
+2. **GREEN**: Write the minimum code to make the test pass
+3. **REFACTOR**: Clean up the code while keeping tests green
+
+Rules:
+- Tests MUST be written BEFORE implementation code — no exceptions
+- Tests MUST fail before implementation begins (proves the test is valid)
+- Every function, endpoint, tool, and handler MUST have corresponding tests
+- Minimum 80% code coverage gate — CI/build MUST fail below this threshold
+- Test categories: unit (isolated logic), integration (component interaction),
+  contract (API shape), E2E (full pipeline)
+- Mock external dependencies (OpenAI API, Gmail, Twilio, Kafka) in unit tests
+- Use real PostgreSQL (via testcontainers or docker) for integration tests
+
+**Rationale**: A 24/7 AI agent handling real customer messages cannot ship
+untested code. TDD catches regressions before they reach production, forces
+clear interface design, and serves as living documentation. The 80% gate
+ensures no component ships without verification.
+
+### IV. Database as Source of Truth
 
 All state MUST be persisted in PostgreSQL. No in-memory-only state for
 conversations, tickets, customers, or message history. Every agent
@@ -54,7 +76,7 @@ The PostgreSQL schema IS the CRM — no external CRM integration required.
 In-memory state dies with the process. The database ensures conversation
 continuity across worker pods, channel switches, and infrastructure failures.
 
-### IV. Async Pipeline — Kafka Decouples Intake from Processing
+### V. Async Pipeline — Kafka Decouples Intake from Processing
 
 Channel webhook handlers MUST publish to Kafka and return immediately.
 Agent processing MUST happen in separate worker pods consuming from Kafka.
@@ -65,7 +87,7 @@ constraints. Decoupling intake from processing enables independent scaling
 of API pods (handle webhook volume) and worker pods (handle AI processing
 load). Also provides a dead-letter queue for failed messages.
 
-### V. Fail Gracefully — Never Lose a Customer Message
+### VI. Fail Gracefully — Never Lose a Customer Message
 
 Every processing error MUST result in: (a) an apologetic response sent to
 the customer via their channel, (b) the original message published to a
@@ -77,7 +99,7 @@ support is always the fallback.
 agent that silently drops messages is worse than one that says "I'm having
 trouble, a human will follow up." Customer trust depends on reliability.
 
-### VI. Secrets in Environment, Config in Code
+### VII. Secrets in Environment, Config in Code
 
 API keys, credentials, and tokens MUST come from environment variables or
 Kubernetes Secrets. NEVER hardcode secrets in source code, config files,
@@ -90,7 +112,7 @@ OpenAI API keys, and database passwords. A single leaked credential
 compromises the entire system. Environment-based config also enables
 different settings per deployment environment.
 
-### VII. Smallest Viable Diff — Build Incrementally
+### VIII. Smallest Viable Diff — Build Incrementally
 
 Each development step MUST produce a working, testable increment. Commit
 after each logical unit of work. Never attempt to build the entire system
@@ -116,6 +138,10 @@ DB + Agent + Web Form scores 40+ points even without Gmail/WhatsApp/K8s.
 | Frontend | React / Next.js | Web Support Form only |
 | Email | Gmail API | OAuth2 + Pub/Sub push notifications |
 | Messaging | Twilio WhatsApp API | Webhook + REST |
+| Testing | pytest + pytest-asyncio | TDD mandatory, 80% coverage gate |
+| Test Coverage | pytest-cov | Enforced in CI |
+| Test HTTP | httpx + AsyncClient | FastAPI integration tests |
+| Load Testing | Locust | 24/7 readiness validation |
 | Container | Docker | Multi-stage builds |
 | Orchestration | Kubernetes | minikube for local dev |
 
@@ -136,6 +162,8 @@ DB + Agent + Web Form scores 40+ points even without Gmail/WhatsApp/K8s.
 - The agent MUST NEVER process refunds — escalate to billing
 - Tickets MUST be created BEFORE any agent response
 - Responses MUST be formatted per channel (email: formal, WhatsApp: concise, web: semi-formal)
+- Minimum 80% test coverage — no merge without passing this gate
+- Tests MUST be written BEFORE implementation (Red-Green-Refactor)
 
 ## Development Workflow
 
@@ -160,13 +188,26 @@ Step 9: E2E testing + documentation + discovery log
 - Each commit MUST leave the system in a runnable state
 - No "WIP" commits on the main feature branch
 
-### Testing Strategy
+### Testing Strategy (TDD — Red-Green-Refactor)
 
-- Unit tests for database queries and agent tools
-- Integration tests for each channel handler
-- E2E tests for the full pipeline (form submit → agent response)
-- Load tests with Locust for 24/7 readiness validation
-- Test each channel independently before testing cross-channel
+For every feature, the workflow is:
+1. Write failing tests (RED)
+2. Implement minimum code to pass (GREEN)
+3. Refactor while tests stay green (REFACTOR)
+
+| Test Layer | Scope | Tools | When |
+|------------|-------|-------|------|
+| Unit | Isolated functions, tools, formatters | pytest, unittest.mock | Every function |
+| Integration | DB queries, channel handlers, API endpoints | pytest-asyncio, httpx, testcontainers | Every component |
+| Contract | API request/response shape validation | httpx + AsyncClient | Every endpoint |
+| E2E | Full pipeline (form → Kafka → agent → response) | pytest + docker-compose | Per channel |
+| Load | 24/7 readiness, concurrent users | Locust | Pre-deployment |
+
+Coverage enforcement:
+- `pytest --cov=src --cov-fail-under=80` MUST pass before any merge
+- Mock external APIs (OpenAI, Gmail, Twilio) in unit/integration tests
+- Use real PostgreSQL for integration tests (docker or testcontainers)
+- Test each channel independently, then test cross-channel continuity
 
 ## Governance
 
@@ -184,4 +225,4 @@ new principles or material expansion, PATCH for clarifications.
 **Compliance review**: Before each commit, verify the change does not
 violate any Hard Constraint or Core Principle listed above.
 
-**Version**: 1.0.0 | **Ratified**: 2026-02-08 | **Last Amended**: 2026-02-08
+**Version**: 1.1.0 | **Ratified**: 2026-02-08 | **Last Amended**: 2026-02-08

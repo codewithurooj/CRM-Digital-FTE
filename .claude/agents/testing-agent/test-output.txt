@@ -1,0 +1,51 @@
+Traceback (most recent call last):
+  File "C:\Users\pc1\Desktop\full-stack-todo\.claude\agents\testing-agent\chat-endpoint-tester.py", line 548, in <module>
+    run_test_suite()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\pc1\Desktop\full-stack-todo\.claude\agents\testing-agent\chat-endpoint-tester.py", line 479, in run_test_suite
+    tester.send_chat_message(
+    ~~~~~~~~~~~~~~~~~~~~~~~~^
+        test_name="Add Task: 'buy milk'",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        expected_keywords=["task", "created", "buy milk"]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\pc1\Desktop\full-stack-todo\.claude\agents\testing-agent\chat-endpoint-tester.py", line 119, in send_chat_message
+    print(f"\n{'\u2500' * 80}")
+    ~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 2-81: character maps to <undefined>
+
+================================================================================
+CHAT ENDPOINT E2E TEST SUITE
+================================================================================
+API URL: http://localhost:8000
+Test User: e2e-test@example.com
+================================================================================
+================================================================================
+BACKEND HEALTH CHECK
+================================================================================
+Checking http://localhost:8000...
+
+[OK] Backend is healthy at http://localhost:8000
+================================================================================
+AUTHENTICATION SETUP
+================================================================================
+
+[SETUP] Attempting signup for e2e-test@example.com...
+[SETUP] [INFO] User already exists (expected if re-running tests)
+[SETUP] Signing in as e2e-test@example.com...
+[SETUP] [OK] Authentication successful
+[SETUP]   User ID: 36c503c9-e28a-45e7-9ded-0cfb14c5acb4
+[SETUP]   JWT Token: eyJhbGciOiJIUzI1NiIs...Iig2uBGPkunTT-N2Thhk
+
+================================================================================
+CHAT ENDPOINT TESTS
+================================================================================
+
+
+Fatal error: 'charmap' codec can't encode characters in position 2-81: character maps to <undefined>

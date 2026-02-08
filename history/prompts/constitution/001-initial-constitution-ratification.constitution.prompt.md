@@ -6,7 +6,7 @@ date: 2026-02-08
 surface: agent
 model: claude-opus-4-6
 feature: none
-branch: 004-rule-based-quiz
+branch: main
 user: pc1
 command: /sp.constitution
 labels: ["constitution", "project-setup", "principles"]
