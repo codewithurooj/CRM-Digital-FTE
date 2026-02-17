@@ -18,6 +18,7 @@ spec:
       containers:
         - name: api
           image: crm-digital-fte:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
           envFrom:

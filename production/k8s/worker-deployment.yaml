@@ -18,6 +18,7 @@ spec:
       containers:
         - name: worker
           image: crm-digital-fte:latest
+          imagePullPolicy: Never
           command: ["python", "-m", "production.workers.message_processor"]
           envFrom:
             - secretRef:
