@@ -28,10 +28,16 @@ class Settings(BaseSettings):
     GMAIL_REFRESH_TOKEN: str = ""
     GMAIL_WATCH_EMAIL: str = "support@techcorp.com"
 
-    # Twilio (optional until WhatsApp channel enabled)
+    # Twilio (optional — fallback WhatsApp provider)
     TWILIO_ACCOUNT_SID: str = ""
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_WHATSAPP_NUMBER: str = "whatsapp:+14155238886"
+
+    # Meta WhatsApp Cloud API (optional — primary WhatsApp provider)
+    META_WHATSAPP_PHONE_NUMBER_ID: str = ""
+    META_WHATSAPP_ACCESS_TOKEN: str = ""
+    META_WHATSAPP_VERIFY_TOKEN: str = ""
+    META_APP_SECRET: str = ""
 
     # App
     LOG_LEVEL: str = "INFO"
