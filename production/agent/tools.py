@@ -1,7 +1,10 @@
 """Agent tools — 5 @function_tool definitions for OpenAI Agents SDK."""
 import json
+import logging
 import time
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 from agents import function_tool
 
@@ -90,51 +93,64 @@ async def search_knowledge_base(query: str, category: str = "") -> str:
         query: The customer's question or search terms
         category: Optional category filter (e.g., 'account', 'billing', 'technical')
     """
+    from openai import AsyncOpenAI
     from production.database.pool import get_pool
     from production.database.queries import knowledge_base
 
     pool = await get_pool()
 
-    # If we have category, try category-based search first
-    if category:
-        results = await knowledge_base.get_by_category(pool, category)
+    # Try pgvector semantic search first
+    try:
+        client = AsyncOpenAI()
+        response = await client.embeddings.create(
+            model="text-embedding-3-small",
+            input=query,
+        )
+        embedding = response.data[0].embedding
+
+        results = await knowledge_base.search_by_embedding(pool, embedding, limit=5)
         if results:
-            entries = []
-            for r in results[:5]:
-                entries.append({
+            entries = [
+                {
                     "title": r.get("title", ""),
                     "content": r.get("content", "")[:500],
                     "category": r.get("category", ""),
-                })
+                    "similarity": round(float(r.get("similarity", 0)), 3),
+                }
+                for r in results
+            ]
+            return json.dumps({"results": entries, "total": len(entries)})
+    except Exception as e:
+        logger.warning(f"Vector search failed, falling back to category search: {e}")
+
+    # Fallback: category-based search
+    if category:
+        results = await knowledge_base.get_by_category(pool, category)
+        if results:
+            entries = [
+                {
+                    "title": r.get("title", ""),
+                    "content": r.get("content", "")[:500],
+                    "category": r.get("category", ""),
+                }
+                for r in results[:5]
+            ]
             return json.dumps({"results": entries, "total": len(entries)})
 
-    # Try embedding-based search (with placeholder embedding for now)
-    # In production, we'd generate an embedding from the query using OpenAI
-    try:
-        # Generate a simple placeholder embedding for text search
-        # Real implementation would use: openai.embeddings.create(model="text-embedding-3-small", input=query)
-        results = await knowledge_base.get_by_category(pool, "general")
-        if not results:
-            # Fallback: try all categories
-            for cat in ["account", "technical", "billing", "how_to", "troubleshooting"]:
-                results = await knowledge_base.get_by_category(pool, cat)
-                if results:
-                    break
-    except Exception:
-        results = []
+    for cat in ["account", "technical", "billing", "how_to", "troubleshooting", "general"]:
+        results = await knowledge_base.get_by_category(pool, cat)
+        if results:
+            entries = [
+                {
+                    "title": r.get("title", ""),
+                    "content": r.get("content", "")[:500],
+                    "category": r.get("category", ""),
+                }
+                for r in results[:5]
+            ]
+            return json.dumps({"results": entries, "total": len(entries)})
 
-    if not results:
-        return json.dumps({"results": [], "total": 0, "message": "No results found"})
-
-    entries = []
-    for r in results[:5]:
-        entries.append({
-            "title": r.get("title", ""),
-            "content": r.get("content", "")[:500],
-            "category": r.get("category", ""),
-        })
-
-    return json.dumps({"results": entries, "total": len(entries)})
+    return json.dumps({"results": [], "total": 0, "message": "No results found"})
 
 
 @function_tool

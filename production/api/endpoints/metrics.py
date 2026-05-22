@@ -1,4 +1,4 @@
-"""Channel metrics endpoint — GET /api/v1/metrics/channels."""
+"""Channel metrics endpoints — /api/v1/metrics/channels and /api/v1/metrics/digest."""
 from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, Query
@@ -80,3 +80,18 @@ async def get_channel_metrics(
         channels=channels,
         totals=totals,
     )
+
+
+@router.get("/metrics/digest")
+async def get_daily_digest(
+    period_hours: int = Query(default=24, ge=1, le=720),
+    pool=Depends(get_db_pool),
+):
+    """Generate and return a daily digest: sentiment trends, escalation rates, channel volumes.
+
+    Runs the same logic as the scheduled metrics worker but on demand.
+    Response is also stored as an `agent_metrics` record for audit purposes.
+    """
+    from production.workers.metrics_collector import generate_daily_digest
+    digest = await generate_daily_digest(pool, period_hours=period_hours)
+    return digest

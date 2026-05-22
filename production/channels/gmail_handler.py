@@ -110,6 +110,9 @@ class GmailHandler(ChannelHandler):
             destination: Recipient email address
             metadata: Must contain 'thread_id' for threading
         """
+        import base64
+        from email.mime.text import MIMEText
+
         try:
             from production.config import get_settings
             settings = get_settings()
@@ -118,17 +121,37 @@ class GmailHandler(ChannelHandler):
                 logger.warning("Gmail credentials not configured, skipping delivery")
                 return False
 
-            # Build email message
+            from google.oauth2.credentials import Credentials
+            from google.auth.transport.requests import Request
+            from googleapiclient.discovery import build
+
+            creds = Credentials(
+                token=None,
+                refresh_token=settings.GMAIL_REFRESH_TOKEN,
+                token_uri="https://oauth2.googleapis.com/token",
+                client_id=settings.GMAIL_CLIENT_ID,
+                client_secret=settings.GMAIL_CLIENT_SECRET,
+                scopes=["https://www.googleapis.com/auth/gmail.send"],
+            )
+            creds.refresh(Request())
+
             thread_id = metadata.get("thread_id", "")
             subject = metadata.get("subject", "Re: Support Request")
             if not subject.startswith("Re: "):
                 subject = f"Re: {subject}"
 
-            # In production, this would use the Gmail API:
-            # service = build('gmail', 'v1', credentials=creds)
-            # message = create_message(destination, subject, formatted)
-            # service.users().messages().send(userId='me', body={'raw': message, 'threadId': thread_id})
-            logger.info(f"Gmail reply queued: to={destination}, thread={thread_id}")
+            msg = MIMEText(formatted)
+            msg["to"] = destination
+            msg["subject"] = subject
+            raw = base64.urlsafe_b64encode(msg.as_bytes()).decode("utf-8")
+
+            body: dict = {"raw": raw}
+            if thread_id:
+                body["threadId"] = thread_id
+
+            service = build("gmail", "v1", credentials=creds)
+            result = service.users().messages().send(userId="me", body=body).execute()
+            logger.info(f"Gmail reply sent: id={result.get('id')}, to={destination}, thread={thread_id}")
             return True
 
         except Exception as e:

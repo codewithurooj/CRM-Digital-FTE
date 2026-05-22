@@ -229,6 +229,7 @@ curl -X POST http://localhost:8000/api/v1/support/form \
 | `POST` | `/api/v1/webhooks/whatsapp` | Twilio WhatsApp webhook | Twilio signature | < 500ms |
 | `GET` | `/api/v1/tickets/{ticket_id}` | Get ticket status + responses | None | - |
 | `GET` | `/api/v1/metrics/channels` | Channel performance metrics | None | - |
+| `GET` | `/api/v1/metrics/digest` | Daily sentiment + volume digest | None | - |
 | `GET` | `/api/v1/health` | System health check (K8s probe) | None | - |
 
 ### Example: Support Form Response
@@ -341,7 +342,8 @@ CRM-Digital-FTE/
 │   │   ├── api-deployment.yaml
 │   │   ├── api-hpa.yaml
 │   │   ├── worker-deployment.yaml
-│   │   └── worker-hpa.yaml
+│   │   ├── worker-hpa.yaml
+│   │   └── ingress.yaml
 │   ├── Dockerfile                    # Multi-stage build
 │   ├── docker-compose.yml            # Local dev (Postgres + Kafka)
 │   └── requirements.txt
@@ -393,6 +395,10 @@ kubectl apply -f production/k8s/worker-deployment.yaml
 # Enable auto-scaling
 kubectl apply -f production/k8s/api-hpa.yaml
 kubectl apply -f production/k8s/worker-hpa.yaml
+
+# Expose via Ingress (requires nginx ingress controller)
+minikube addons enable ingress
+kubectl apply -f production/k8s/ingress.yaml
 ```
 
 ### 24/7 Readiness
@@ -402,6 +408,69 @@ kubectl apply -f production/k8s/worker-hpa.yaml
 - **HPA auto-scaling**: API and worker pods scale independently based on CPU/memory
 - **No single point of failure**: Multiple replicas of API and worker pods
 - **Durable messaging**: Kafka retains messages if workers are temporarily down
+
+---
+
+## Web Form Integration Guide
+
+The support form is a standalone React component that can be embedded in any page.
+
+### Standalone (Next.js dev server)
+
+```bash
+cd web-form
+npm install
+npm run dev        # http://localhost:3000
+```
+
+### Embed in an existing React app
+
+Copy `web-form/src/components/SupportForm.jsx` and its dependencies into your project:
+
+```
+SupportForm.jsx        # Main form component
+FormField.jsx          # Reusable labeled input
+SuccessMessage.jsx     # Post-submission confirmation
+StatusChecker.jsx      # Ticket status lookup by email
+useFormValidation.js   # Validation hook
+api.js                 # submitForm() — POST to /api/v1/support/form
+```
+
+Point `api.js` at your API host:
+
+```js
+// web-form/src/services/api.js
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+```
+
+Then use the component:
+
+```jsx
+import SupportForm from "./components/SupportForm";
+
+export default function SupportPage() {
+  return <SupportForm />;
+}
+```
+
+### Form fields
+
+| Field | Type | Required | Notes |
+|:------|:-----|:--------:|:------|
+| Name | text | Yes | Customer's full name |
+| Email | email | Yes | Used as cross-channel identifier |
+| Subject | text | Yes | Brief issue description |
+| Category | select | Yes | general, technical, billing, feedback, bug_report |
+| Priority | select | No | low (default), medium, high |
+| Message | textarea | Yes | Min 10 characters |
+
+### Ticket status checker
+
+After submission, `SuccessMessage` displays the ticket number. The `StatusChecker` component lets customers look up a ticket by email:
+
+```bash
+curl "http://localhost:8000/api/v1/tickets/{ticket_id}"
+```
 
 ---
 
@@ -463,12 +532,12 @@ This project was built for **Hackathon 5: Build a 24/7 AI Customer Support Agent
 | **Web Support Form** | **10** | **Done** | React form with validation, category/priority selection, status checker |
 | Channel Integrations | 10 | Done | Gmail (Pub/Sub + API), WhatsApp (Twilio webhook + REST) |
 | Database + Kafka | 5 | Done | 8-table PostgreSQL schema, pgvector, Kafka async pipeline |
-| Kubernetes | 5 | Done | 9 manifests, HPA auto-scaling, health probes |
+| Kubernetes | 5 | Done | 10 manifests (incl. Ingress), HPA auto-scaling, health probes |
 | 24/7 Readiness | 10 | Done | Pod restarts, HPA scaling, Kafka durability, no SPOF |
 | Cross-Channel | 10 | Done | `customer_identifiers` table, identity resolution, unified history |
-| Monitoring | 5 | Done | `/metrics/channels` endpoint, per-channel stats, alert thresholds |
+| Monitoring | 5 | Done | `/metrics/channels` + `/metrics/digest` endpoints, Prometheus annotations, alert thresholds |
 | Customer Experience | 10 | Done | Channel-appropriate tone, sentiment analysis, escalation paths |
-| Documentation | 5 | Done | This README, API contracts, deployment guide |
+| Documentation | 5 | Done | This README (deployment guide + API ref + form integration guide), API contracts |
 | Innovation | 10 | Done | Pre-LLM guardrails, keyword sentiment (no LLM cost), MCP server, spec-driven development |
 | **Total** | **100** | | |
 

@@ -82,15 +82,17 @@ class WhatsAppHandler(ChannelHandler):
                 logger.warning("Twilio credentials not configured, skipping delivery")
                 return False
 
-            # In production, this would use the Twilio API:
-            # from twilio.rest import Client
-            # client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-            # message = client.messages.create(
-            #     body=formatted,
-            #     from_=settings.TWILIO_WHATSAPP_NUMBER,
-            #     to=f"whatsapp:{destination}"
-            # )
-            logger.info(f"WhatsApp reply queued: to={destination}")
+            from twilio.rest import Client
+
+            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+            to_number = destination if destination.startswith("whatsapp:") else f"whatsapp:{destination}"
+            message = client.messages.create(
+                body=formatted,
+                from_=settings.TWILIO_WHATSAPP_NUMBER,
+                to=to_number,
+            )
+            logger.info(f"WhatsApp reply sent: sid={message.sid}, to={destination}, status={message.status}")
             return True
 
         except Exception as e:
